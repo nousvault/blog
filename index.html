@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog by NousVault</title>
+  <meta name="description" content="An engineer writing about tech, AI, and how things actually work." />
+  <link rel="canonical" href="https://blog.nous.my.id/" />
+  <link rel="icon" type="image/svg+xml" href="assets/nous-logo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/" class="site-title">Blog by NousVault</a>
+    </header>
+
+    <main>
+      <div class="search-wrap">
+        <input
+          type="search"
+          class="search-input"
+          id="search"
+          placeholder="Search posts…"
+          aria-label="Search posts"
+          autocomplete="off"
+        />
+      </div>
+
+      <p class="search-empty" id="search-empty" role="status" aria-live="polite">
+        No posts match your search.
+      </p>
+
+      <ul class="post-list" id="post-list" aria-label="Posts"></ul>
+    </main>
+
+    <footer>
+      <p>Aryo · <span id="year"></span></p>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+  <script>
+    const postList = document.getElementById('post-list');
+    const searchInput = document.getElementById('search');
+    const searchEmpty = document.getElementById('search-empty');
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    let fuse = null;
+    let allPosts = [];
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function renderPosts(posts) {
+      postList.innerHTML = '';
+      if (posts.length === 0) {
+        searchEmpty.style.display = 'block';
+        return;
+      }
+      searchEmpty.style.display = 'none';
+      posts.forEach(post => {
+        const li = document.createElement('li');
+        li.className = 'post-item';
+        li.innerHTML = `
+          <span class="post-date">${formatDate(post.date)}</span>
+          ${post.type === 'til' ? '<span class="post-tag">TIL</span>' : ''}
+          <a class="post-title-link" href="/${post.slug}">${post.title}</a>
+        `;
+        postList.appendChild(li);
+      });
+    }
+
+    function showSkeleton() {
+      postList.innerHTML = Array(5).fill(0).map(() => `
+        <li class="post-item">
+          <span class="post-date"><span class="skeleton" style="width:80px"></span></span>
+          <span class="skeleton" style="width:60%"></span>
+        </li>
+      `).join('');
+    }
+
+    async function init() {
+      showSkeleton();
+      try {
+        const res = await fetch('/posts.json');
+        allPosts = await res.json();
+        renderPosts(allPosts);
+        fuse = new Fuse(allPosts, {
+          keys: ['title'],
+          threshold: 0.35,
+          distance: 200,
+        });
+      } catch (e) {
+        postList.innerHTML = '';
+        searchEmpty.textContent = 'Could not load posts.';
+        searchEmpty.style.display = 'block';
+      }
+    }
+
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim();
+      if (!q) {
+        renderPosts(allPosts);
+        return;
+      }
+      if (fuse) {
+        const results = fuse.search(q).map(r => r.item);
+        renderPosts(results);
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

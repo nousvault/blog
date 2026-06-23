@@ -1,0 +1,30 @@
+# Cloudflare Pages — cache rules
+
+# Long-lived immutable assets (hashed filenames if you ever add them)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Pre-rendered post HTML — revalidate on each deploy
+/dist/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Post index — revalidate on each deploy
+/posts.json
+  Cache-Control: public, max-age=0, must-revalidate
+
+# CSS and JS — revalidate (no content hashing yet in v1)
+/styles.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+# HTML pages
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/post.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Security headers
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer-when-downgrade
