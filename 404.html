@@ -42,7 +42,7 @@
 
       try {
         // Load post HTML (pre-rendered by build.js)
-        const res = await fetch(`/dist/${slug}.html`);
+        const res = await fetch(`/dist/${slug}`);
         if (!res.ok) throw new Error('not found');
         const html = await res.text();
 
