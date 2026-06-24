@@ -3,5 +3,10 @@
 # Homepage
 /           /index.html   200
 
+# Static files — must come before slug catch-all
+/posts.json         /posts.json         200
+/styles.css         /styles.css         200
+/dist/:file         /dist/:file         200
+
 # All post slugs → post shell (which reads slug from URL)
 /:slug      /post.html    200
