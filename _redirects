@@ -8,5 +8,4 @@
 /styles.css         /styles.css         200
 /dist/:file         /dist/:file         200
 
-# All post slugs → post shell (which reads slug from URL)
-/:slug      /post.html    200
+# SPA fallback handled by 404.html (CF Pages native)

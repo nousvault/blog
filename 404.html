@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog by NousVault</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/nous-logo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <main id="post-root">
+      <!-- Skeleton while loading -->
+      <div id="skeleton">
+        <div style="padding: 48px 0 8px">
+          <div class="skeleton" style="width: 60px; margin-bottom: 24px"></div>
+          <div class="skeleton" style="width: 80%; height: 24px; margin-bottom: 12px"></div>
+          <div class="skeleton" style="width: 55%; height: 24px; margin-bottom: 32px"></div>
+          <div class="skeleton" style="width: 100%; margin-bottom: 10px"></div>
+          <div class="skeleton" style="width: 100%; margin-bottom: 10px"></div>
+          <div class="skeleton" style="width: 80%; margin-bottom: 10px"></div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Aryo · <span id="year"></span></p>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    const slug = window.location.pathname.replace(/^\/|\/$/g, '') || '';
+
+    async function loadPost() {
+      if (!slug) { window.location.href = '/'; return; }
+
+      try {
+        // Load post HTML (pre-rendered by build.js)
+        const res = await fetch(`/dist/${slug}.html`);
+        if (!res.ok) throw new Error('not found');
+        const html = await res.text();
+
+        // Parse meta from embedded JSON
+        const metaMatch = html.match(/<!--META:(.*?)-->/s);
+        const meta = metaMatch ? JSON.parse(metaMatch[1]) : {};
+
+        // Update page title + meta
+        document.title = `${meta.title || slug} — Blog by NousVault`;
+        const desc = document.createElement('meta');
+        desc.name = 'description';
+        desc.content = meta.title || '';
+        document.head.appendChild(desc);
+
+        // Render
+        const root = document.getElementById('post-root');
+        root.innerHTML = `
+          <header style="padding: 48px 0 0">
+            <a href="/" class="site-title">Blog by NousVault</a>
+          </header>
+          <article>
+            <div class="post-header" style="margin-top: 40px">
+              <div class="post-meta">
+                <span>${formatDate(meta.date)}</span>
+                ${meta.type === 'til' ? '<span class="post-tag">TIL</span>' : ''}
+              </div>
+              <h1 class="post-title">${meta.title || ''}</h1>
+            </div>
+            <div class="post-body">${html.replace(/<!--META:.*?-->/s, '')}</div>
+          </article>
+          <a href="/" class="back-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+            All posts
+          </a>
+        `;
+      } catch (e) {
+        const root = document.getElementById('post-root');
+        root.innerHTML = `
+          <header style="padding: 48px 0 0">
+            <a href="/" class="site-title">Blog by NousVault</a>
+          </header>
+          <div style="padding: 64px 0; color: var(--color-text-muted); font-size: var(--text-sm)">
+            Post not found. <a href="/" style="color: var(--color-accent)">Back to all posts</a>.
+          </div>
+        `;
+        document.title = 'Post not found — Blog by NousVault';
+      }
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    loadPost();
+  </script>
+</body>
+</html>
